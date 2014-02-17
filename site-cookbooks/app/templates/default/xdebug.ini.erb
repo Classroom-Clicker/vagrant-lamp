@@ -1,0 +1,18 @@
+zend_extension=<%= %x[find /usr/lib/php5 -name 'xdebug.so' 2> /dev/null] %>
+
+html_errors=on
+display_errors=on
+
+xdebug.default_enable=on
+xdebug.remote_enable=on
+xdebug.remote_handler=dbgp
+xdebug.remote_host=localhost
+xdebug.remote_port=9000
+xdebug.remote_autostart=on
+
+xdebug.collect_vars=on
+xdebug.collect_params=4
+xdebug.dump_globals=on
+xdebug.dump.SERVER=REQUEST_URI
+xdebug.show_local_vars=on
+xdebug.max_nesting_level=250

@@ -1,0 +1,22 @@
+<VirtualHost *:80>
+	ServerName <%= @node[:app][:server_name] %>
+	ServerAlias <% @node[:app][:server_aliases].each do |a| %><%= a %> <% end %>
+	DocumentRoot <%= @node[:app][:src_path] %>
+
+	<Directory <%= @node[:app][:src_path] %>>
+		EnableSendfile Off
+		Options FollowSymLinks
+		AllowOverride <%= [@node[:app][:allow_override] || "All" ].flatten.join " " %>
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	<Directory />
+		Options FollowSymLinks
+		AllowOverride None
+	</Directory>
+
+	LogLevel info
+	ErrorLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-error.log
+	CustomLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-access.log combined
+</VirtualHost>
