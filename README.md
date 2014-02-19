@@ -16,15 +16,27 @@ Version
 
 Requirements
 ------------
-- [Vagrant](http://www.vagrantup.com/downloads.html).
-- [Virtualbox](https://www.virtualbox.org/wiki/Downloads).
-- [Git](http://git-scm.com/downloads).
+- [Vagrant](http://www.vagrantup.com/downloads.html)
+- [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
+- [Git](http://git-scm.com/downloads)
+- [Ruby](https://www.ruby-lang.org/fr/)
 
 Installation
 ------------
-1. Checkout the repository ```git clone git@github.com/Classroom-Clicker/vagrant-lamp```
-2. Run the command ```vagrant up --provision``` in the just created directory
-3. Nothing. You web server is up, you can start modifying the content of the public directory
+1) Checkout this repository ```git clone git@github.com:Classroom-Clicker/vagrant-lamp```
+
+2) Install the ruby gem call berkshelf ``` gem install berkshelf ``` (might require sudo depending on your ruby installation)
+
+3) Install the vagrant plugins berkshelf, hostmanager and omnibus 
+```
+vagrant plugin install vagrant-berkshelf
+vagrant plugin install vagrant-hostmanager
+vagrant plugin install vagrant-omnibus 
+```
+
+4) Run the command ```vagrant up --provision``` in the just created directory. It will create the vm.
+
+5) You are done. You web server is up, you can start modifying the content of the public directory
 
 How to use
 ----------
