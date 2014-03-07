@@ -14,8 +14,8 @@ include_recipe "apache2::mod_rewrite"
 include_recipe "dotdeb"
 include_recipe "dotdeb::php54"
 
-# Install PHP5 packages
-node['php']['packages'].each do |a_package|
+# Install packages
+node['app']['packages'].each do |a_package|
   package a_package
 end
 

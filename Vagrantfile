@@ -6,7 +6,7 @@
 require './config/general.rb'
 require './config/database.rb'
 
-php_packages = %w{ php5-mysqlnd php5-xdebug libapache2-mod-php5 php5-curl php-pear}
+packages = %w{ php5-mysqlnd php5-xdebug libapache2-mod-php5 php5-curl php-pear curl}
 
 
 ### Do not modify this unless you know what you are doing
@@ -63,9 +63,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 				:server_name    => App::Project_name + ".dev",
 				:server_aliases =>  [ "www." + App::Project_name + ".dev" ],
 				:server_address => App::Ip_address,
+				:packages => packages,
 			},
 			:php =>{
-				:packages => php_packages,
 				:install_method => "package",
 				:directives => {}
 			},

@@ -10,6 +10,7 @@ Contains
 - Php 5.4
 - Xdebug
 - phpunit
+- Curl
 
 Version
 -------
