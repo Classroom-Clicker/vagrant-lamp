@@ -37,3 +37,11 @@ template "/etc/php5/mods-available/xdebug.ini" do
 	group "root"
 	mode 0644
 end
+
+execute "phpunit" do
+    command "pear config-set auto_discover 1 && pear install pear.phpunit.de/PHPUnit"
+    action :run
+end
+
+#config.vm.provision :shell, :inline => ""
+#config.vm.provision :shell, :inline =>

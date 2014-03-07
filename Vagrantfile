@@ -6,7 +6,7 @@
 require './config/general.rb'
 require './config/database.rb'
 
-php_packages = %w{ php5-mysqlnd php5-xdebug libapache2-mod-php5}
+php_packages = %w{ php5-mysqlnd php5-xdebug libapache2-mod-php5 php5-curl php-pear}
 
 
 ### Do not modify this unless you know what you are doing
@@ -49,7 +49,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
 	# update the apt repository
 	config.vm.provision :shell, :inline => "apt-get update -qq"
-	
+
 	# Enable and configure chef solo
 	config.vm.provision :chef_solo do |chef|
 		chef.add_recipe "app::web_server"

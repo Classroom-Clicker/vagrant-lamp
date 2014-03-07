@@ -9,6 +9,7 @@ Contains
 - Mysql
 - Php 5.4
 - Xdebug
+- phpunit
 
 Version
 -------
