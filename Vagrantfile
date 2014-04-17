@@ -45,15 +45,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 	config.vm.provision :hostmanager
 
 	# set the shared folder
-	config.vm.synced_folder "./public/" , App::Src_path, :mount_options => ["dmode=777", "fmode=666"]
+	config.vm.synced_folder "./public/" , App::Src_path, {:mount_options => ["dmode=777", "fmode=666"]}
 
 	# update the apt repository
 	config.vm.provision :shell, :inline => "apt-get update -qq"
 
 	# Enable and configure chef solo
 	config.vm.provision :chef_solo do |chef|
-		chef.add_recipe "app::web_server"
-		chef.add_recipe "app::database"
+		chef.custom_config_path = "Vagrantfile.chef"
+		# add the recipes
+		chef.add_recipe "vagrant-lamp::web_server"
+		chef.add_recipe "vagrant-lamp::database"
 
 		chef.json = {
 			:app => {
