@@ -31,7 +31,7 @@ Installation
 
 3) Install the vagrant plugins berkshelf, hostmanager and omnibus
 ```
-vagrant plugin install vagrant-berkshelf
+vagrant plugin install vagrant-berkshelf --plugin-version 2.0.0.rc3
 vagrant plugin install vagrant-hostmanager
 vagrant plugin install vagrant-omnibus
 ```
