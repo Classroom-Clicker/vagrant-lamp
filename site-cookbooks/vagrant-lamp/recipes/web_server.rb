@@ -8,6 +8,7 @@
 # Install Apache
 include_recipe "apache2"
 include_recipe "apache2::mod_php5"
+include_recipe "apache2::mod_ssl"
 include_recipe "apache2::mod_rewrite"
 
 # Install php
@@ -17,6 +18,10 @@ include_recipe "dotdeb::php54"
 # Install packages
 node['app']['packages'].each do |a_package|
   package a_package
+end
+
+apache_module "ssl" do
+  conf true
 end
 
 # create apache config
@@ -42,6 +47,3 @@ execute "phpunit" do
     command "pear config-set auto_discover 1 && pear install pear.phpunit.de/PHPUnit"
     action :run
 end
-
-#config.vm.provision :shell, :inline => ""
-#config.vm.provision :shell, :inline =>
