@@ -12,11 +12,37 @@
 	</Directory>
 
 	<Directory />
-		Options FollowSymLinks
-		AllowOverride None
+		Order deny,allow
+		Deny from all
 	</Directory>
 
 	LogLevel info
-	ErrorLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-error.log
-	CustomLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-access.log combined
+	ErrorLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-web-error.log
+	CustomLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-web-access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+	ServerName <%= @node[:app][:server_name] %>
+	ServerAlias <% @node[:app][:server_aliases].each do |a| %><%= a %> <% end %>
+	DocumentRoot <%= @node[:app][:src_path] %>
+	SSLEngine on
+	SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+	SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+
+	<Directory <%= @node[:app][:src_path] %>>
+		EnableSendfile Off
+		Options FollowSymLinks
+		AllowOverride <%= [@node[:app][:allow_override] || "All" ].flatten.join " " %>
+		Order allow,deny
+		Allow from all
+	</Directory>
+
+	<Directory />
+		Order deny,allow
+		Deny from all
+	</Directory>
+
+	LogLevel info
+	ErrorLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-ssl-error.log
+	CustomLog <%= @node[:apache][:log_dir] %>/<%= @node[:app][:name] %>-ssl-access.log combined
 </VirtualHost>
