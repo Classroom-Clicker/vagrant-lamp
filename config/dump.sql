@@ -49,6 +49,12 @@ user_id integer NOT NULL,
 permission integer NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Secrets(
+apikey varchar(64) NOT NULL,
+user_id integer NOT NULL,
+secret varchar(255) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS Questions(
 id integer NOT NULL,
 number integer NOT NULL,
@@ -108,6 +114,7 @@ ALTER TABLE QuizSessions ADD CONSTRAINT pk_QuizSessions_id PRIMARY KEY (id);
 ALTER TABLE QuizSessions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Quizzes ADD CONSTRAINT pk_Quizzes_id PRIMARY KEY (id);
 ALTER TABLE Quizzes MODIFY id integer AUTO_INCREMENT;
+ALTER TABLE Secrets ADD CONSTRAINT pk_Secrets_id PRIMARY KEY (apikey);
 ALTER TABLE UserAnswers ADD CONSTRAINT pk_UserAnswers_id PRIMARY KEY (id);
 ALTER TABLE UserAnswers MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE UserQuestions ADD CONSTRAINT pk_UserQuestions_id PRIMARY KEY (id);
@@ -116,8 +123,9 @@ ALTER TABLE Users ADD CONSTRAINT pk_Users_id PRIMARY KEY (id);
 ALTER TABLE Users MODIFY id integer AUTO_INCREMENT;
 
 /* PART 3 : Creation of the UNIQUE constaints */
-ALTER TABLE Answers ADD CONSTRAINT uk_Answers_number UNIQUE (id, number);
-ALTER TABLE Questions ADD CONSTRAINT uk_Questions_number UNIQUE (id, number);
+ALTER TABLE Answers ADD CONSTRAINT uk_Answers_number UNIQUE (question_id, number);
+ALTER TABLE Questions ADD CONSTRAINT uk_Questions_number UNIQUE (quiz_id, number);
+ALTER TABLE Secrets ADD CONSTRAINT uk_Secrets_number UNIQUE (user_id);
 ALTER TABLE Users ADD CONSTRAINT uk_Users_email UNIQUE (email);
 
 /* PART 4 : Creation of the FOREIGN KEYS */
@@ -132,6 +140,7 @@ ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_quiz FOREIGN KEY (quiz_i
 ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_course FOREIGN KEY (course_id) REFERENCES Courses(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE Secrets ADD CONSTRAINT fk_Secrets_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_answer FOREIGN KEY (answer_id) REFERENCES Answers(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_userquestion FOREIGN KEY (userquestion_id) REFERENCES UserQuestions(id);
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_question FOREIGN KEY (question_id) REFERENCES Questions(id);
@@ -144,6 +153,11 @@ INSERT INTO Users (id, email, firstname, lastname ) VALUES
 (2, 'shiplem3@students.wwu.edu', 'Mark', 'SHIPLEEY'),
 (3, 'klionsk@students.wwu.edu', 'Katie', 'KLIONS'),
 (4, 'thomas92@students.wwu.edu', 'Cody', 'THOMAS');
+INSERT INTO Secrets (apikey, user_id, secret ) VALUES
+('nufNixPhWpPxanqeLVJZvJaYKrdmXxuH', 1, 'dpUgrjuxtiQCiVqlQZZAqrBFnglKnaSE'),
+('kfKDdoZxpytjxOYOwEvZEuitsTMlBTsr', 2, 'wHVFQjqbbrfJjaaHJVwsbIsiTdymYiYP'),
+('mjpKwflqsYNBOvEBhzspVGlGnRHcWoyl', 3, 'qngaZgniKCvbYebZXUnsbnHsdYSNdEbE'),
+('iQUREatQuYsWVqqqrWbeRhYauhBexcyF', 4, 'aenWftyEqQURIAhjUbeEpvFykrWxYwPu');
 INSERT INTO Courses(id, name, user_id) VALUES
 (1, 'CS 442', 1),
 (2, 'CS 352', 4);
