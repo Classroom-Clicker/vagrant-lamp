@@ -22,6 +22,7 @@ Requirements
 - [Virtualbox](https://www.virtualbox.org/wiki/Downloads)
 - [Git](http://git-scm.com/downloads)
 - [Ruby](https://www.ruby-lang.org/fr/)
+- g++
 
 Installation
 ------------
@@ -31,7 +32,7 @@ Installation
 
 3) Install the vagrant plugins berkshelf, hostmanager and omnibus
 ```
-vagrant plugin install vagrant-berkshelf --plugin-version 2.0.0.rc3
+vagrant plugin install vagrant-berkshelf --plugin-version 2.0.1
 vagrant plugin install vagrant-hostmanager
 vagrant plugin install vagrant-omnibus
 ```
