@@ -10,8 +10,10 @@ Except for the first and the last part, in each part the creation of elements is
 */
 
 /* PART 1 : Cleaning */
+/* Clean old version of the tables */
 DROP TABLE IF EXISTS PermissionQuizzes;
 DROP TABLE IF EXISTS PermissionCourses;
+DROP TABLE IF EXISTS Permissions;
 DROP TABLE IF EXISTS UserAnswers;
 DROP TABLE IF EXISTS Answers;
 DROP TABLE IF EXISTS UserQuestions;
@@ -19,7 +21,9 @@ DROP TABLE IF EXISTS Questions;
 DROP TABLE IF EXISTS QuizSessions;
 DROP TABLE IF EXISTS Quizzes;
 DROP TABLE IF EXISTS Courses;
+DROP TABLE IF EXISTS Secrets;
 DROP TABLE IF EXISTS Users;
+DROP TABLE IF EXISTS Roles;
 
 
 /* PART 2 : Creation of the tables */
@@ -37,22 +41,11 @@ name varchar(255) NOT NULL,
 user_id integer NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS PermissionCourses(
-course_id integer NOT NULL,
+CREATE TABLE IF NOT EXISTS Permissions(
 user_id integer NOT NULL,
-permission integer NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS PermissionQuizzes(
-quiz_id integer NOT NULL,
-user_id integer NOT NULL,
-permission integer NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS Secrets(
-apikey varchar(64) NOT NULL,
-user_id integer NOT NULL,
-secret varchar(255) NOT NULL
+type varchar(255) NOT NULL,
+parent_id integer NOT NULL,
+name varchar(255) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Questions(
@@ -81,6 +74,17 @@ parentquiz integer,
 user_id integer NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Roles(
+id integer NOT NULL,
+name varchar(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Secrets(
+apikey varchar(64) NOT NULL,
+user_id integer NOT NULL,
+secret varchar(255) NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS UserAnswers(
 id integer NOT NULL,
 userquestion_id integer NOT NULL,
@@ -96,7 +100,9 @@ question_id integer
 
 CREATE TABlE IF NOT EXISTS Users(
 id integer NOT NULL,
-email varchar(255) NOT NULL,
+role_id integer NOT NULL,
+username varchar(255) NOT NULL,
+email varchar(255),
 firstname varchar(255),
 lastname varchar(255)
 );
@@ -106,14 +112,15 @@ ALTER TABLE Answers ADD CONSTRAINT pk_Answers_id PRIMARY KEY (id);
 ALTER TABLE Answers MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Courses ADD CONSTRAINT pk_Courses_id PRIMARY KEY (id);
 ALTER TABLE Courses MODIFY id integer AUTO_INCREMENT;
-ALTER TABLE PermissionCourses ADD CONSTRAINT pk_PermissionCourses_id PRIMARY KEY (course_id, user_id, permission);
-ALTER TABLE PermissionQuizzes ADD CONSTRAINT pk_PermissionQuiz_id PRIMARY KEY (quiz_id, user_id, permission);
 ALTER TABLE Questions ADD CONSTRAINT pk_Questions_id PRIMARY KEY (id);
 ALTER TABLE Questions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE QuizSessions ADD CONSTRAINT pk_QuizSessions_id PRIMARY KEY (id);
 ALTER TABLE QuizSessions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Quizzes ADD CONSTRAINT pk_Quizzes_id PRIMARY KEY (id);
 ALTER TABLE Quizzes MODIFY id integer AUTO_INCREMENT;
+ALTER TABLE Permissions ADD CONSTRAINT pk_Permissions_id PRIMARY KEY (user_id, type, parent_id, name);
+ALTER TABLE Roles ADD CONSTRAINT pk_Roles_id PRIMARY KEY (id);
+ALTER TABLE Roles MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Secrets ADD CONSTRAINT pk_Secrets_id PRIMARY KEY (apikey);
 ALTER TABLE UserAnswers ADD CONSTRAINT pk_UserAnswers_id PRIMARY KEY (id);
 ALTER TABLE UserAnswers MODIFY id integer AUTO_INCREMENT;
@@ -126,21 +133,19 @@ ALTER TABLE Users MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Answers ADD CONSTRAINT uk_Answers_number UNIQUE (question_id, number);
 ALTER TABLE Questions ADD CONSTRAINT uk_Questions_number UNIQUE (quiz_id, number);
 ALTER TABLE Secrets ADD CONSTRAINT uk_Secrets_number UNIQUE (user_id);
-ALTER TABLE Users ADD CONSTRAINT uk_Users_email UNIQUE (email);
+ALTER TABLE Users ADD CONSTRAINT uk_Users_username UNIQUE (username);
 
 /* PART 4 : Creation of the FOREIGN KEYS */
 ALTER TABLE Answers ADD CONSTRAINT fk_Answers_question FOREIGN KEY (question_id) REFERENCES Questions(id);
 ALTER TABLE Courses ADD CONSTRAINT fk_Courses_user FOREIGN KEY (user_id) REFERENCES Users(id);
-ALTER TABLE PermissionCourses ADD CONSTRAINT fk_PermissionCourses_user FOREIGN KEY (user_id) REFERENCES Users(id);
-ALTER TABLE PermissionCourses ADD CONSTRAINT fk_PermissionCourses_course FOREIGN KEY (course_id) REFERENCES Courses(id);
-ALTER TABLE PermissionQuizzes ADD CONSTRAINT fk_PermissionQuizzes_quiz FOREIGN KEY (quiz_id) REFERENCES Quizzes(id);
-ALTER TABLE PermissionQuizzes ADD CONSTRAINT fk_PermissionQuizzes_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE Permissions ADD CONSTRAINT fk_Permissions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Questions ADD CONSTRAINT fk_Questions_quiz FOREIGN KEY (quiz_id) REFERENCES Quizzes(id);
 ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_quiz FOREIGN KEY (quiz_id) REFERENCES Quizzes(id);
 ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_course FOREIGN KEY (course_id) REFERENCES Courses(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Secrets ADD CONSTRAINT fk_Secrets_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE Users ADD CONSTRAINT fk_Users_role FOREIGN KEY (role_id) REFERENCES Roles(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_answer FOREIGN KEY (answer_id) REFERENCES Answers(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_userquestion FOREIGN KEY (userquestion_id) REFERENCES UserQuestions(id);
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_question FOREIGN KEY (question_id) REFERENCES Questions(id);
@@ -148,11 +153,18 @@ ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_quizsession FOREIGN KE
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 
 /* Part 5 : populate databases for tests */
-INSERT INTO Users (id, email, firstname, lastname ) VALUES
-(1, 'gattazr@students.wwu.edu', 'Remi', 'GATTAZ'),
-(2, 'shiplem3@students.wwu.edu', 'Mark', 'SHIPLEEY'),
-(3, 'klionsk@students.wwu.edu', 'Katie', 'KLIONS'),
-(4, 'thomas92@students.wwu.edu', 'Cody', 'THOMAS');
+INSERT INTO Roles (id, name) VALUES
+(1, 'admninistrator'),
+(2, 'professor'),
+(3, 'student');
+INSERT INTO Users (id, role_id, username, email, firstname, lastname ) VALUES
+(1, 3, 'gattazr', 'gattazr@students.wwu.edu', 'Remi', 'GATTAZ'),
+(2, 3, 'shiplem3', 'shiplem3@students.wwu.edu', 'Mark', 'SHIPLEEY'),
+(3, 3, 'klionsk', 'klionsk@students.wwu.edu', 'Katie', 'KLIONS'),
+(4, 3, 'thomas92', 'thomas92@students.wwu.edu', 'Cody', 'THOMAS');
+INSERT INTO Permissions(user_id,type,parent_id,name) VALUES
+(1, 'quiz', 2, 'write'),
+(2, 'course', 1, 'write');
 INSERT INTO Secrets (apikey, user_id, secret ) VALUES
 ('nufNixPhWpPxanqeLVJZvJaYKrdmXxuH', 1, 'dpUgrjuxtiQCiVqlQZZAqrBFnglKnaSE'),
 ('kfKDdoZxpytjxOYOwEvZEuitsTMlBTsr', 2, 'wHVFQjqbbrfJjaaHJVwsbIsiTdymYiYP'),
@@ -162,7 +174,7 @@ INSERT INTO Courses(id, name, user_id) VALUES
 (1, 'CS 442', 1),
 (2, 'CS 352', 4);
 INSERT INTO Quizzes(id, name, course_id, parentquiz, user_id) VALUES
-(1, 'Quizz 1', 1, null, 1),
+(1, 'Quizz 1', 1, null, 2),
 (2, 'First quizz', 2, null, 4);
 INSERT INTO Questions (id, number, quiz_id, type, question) VALUES
 (1, 1, 1, 1, 'What is Javac ?'),
@@ -197,7 +209,3 @@ INSERT INTO UserAnswers (id, userquestion_id, answer_id) VALUES
 (1, 1, 3),
 (2, 2, 7),
 (3, 3, 1);
-INSERT INTO PermissionCourses (course_id, user_id, permission) VALUES
-(1,2,2);
-INSERT INTO PermissionQuizzes (quiz_id, user_id, permission) VALUES
-(2,3,1);
