@@ -11,8 +11,9 @@ Except for the first and the last part, in each part the creation of elements is
 
 /* PART 1 : Cleaning */
 /* Clean old version of the tables */
-DROP TABLE IF EXISTS PermissionQuizzes;
-DROP TABLE IF EXISTS PermissionCourses;
+DROP TABLE IF EXISTS UsersRoles;
+DROP TABLE IF EXISTS RolesPermissions;
+DROP TABLE IF EXISTS SpecialsPermissions;
 DROP TABLE IF EXISTS Permissions;
 DROP TABLE IF EXISTS UserAnswers;
 DROP TABLE IF EXISTS Answers;
@@ -42,9 +43,7 @@ user_id integer NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Permissions(
-user_id integer NOT NULL,
-type varchar(255) NOT NULL,
-parent_id integer NOT NULL,
+id integer NOT NULL,
 name varchar(255) NOT NULL
 );
 
@@ -79,10 +78,21 @@ id integer NOT NULL,
 name varchar(255) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS RolesPermissions(
+role_id integer NOT NULL,
+permission_id integer NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS Secrets(
 apikey varchar(64) NOT NULL,
 user_id integer NOT NULL,
 secret varchar(255) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS SpecialsPermissions(
+user_id integer NOT NULL,
+permission_id integer NOT NULL,
+object_id integer NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS UserAnswers(
@@ -100,11 +110,15 @@ question_id integer
 
 CREATE TABlE IF NOT EXISTS Users(
 id integer NOT NULL,
-role_id integer NOT NULL,
 username varchar(255) NOT NULL,
 email varchar(255),
 firstname varchar(255),
 lastname varchar(255)
+);
+
+CREATE TABLE IF NOT EXISTS UsersRoles(
+user_id integer NOT NULL,
+role_id integer NOT NULL
 );
 
 /* PART 3 : Creation of the PRIMARY KEYS and AUTO_INCREMENT */
@@ -118,16 +132,20 @@ ALTER TABLE QuizSessions ADD CONSTRAINT pk_QuizSessions_id PRIMARY KEY (id);
 ALTER TABLE QuizSessions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Quizzes ADD CONSTRAINT pk_Quizzes_id PRIMARY KEY (id);
 ALTER TABLE Quizzes MODIFY id integer AUTO_INCREMENT;
-ALTER TABLE Permissions ADD CONSTRAINT pk_Permissions_id PRIMARY KEY (user_id, type, parent_id, name);
+ALTER TABLE Permissions ADD CONSTRAINT pk_Permissions_id PRIMARY KEY (id);
+ALTER TABLE Permissions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Roles ADD CONSTRAINT pk_Roles_id PRIMARY KEY (id);
 ALTER TABLE Roles MODIFY id integer AUTO_INCREMENT;
+ALTER TABLE RolesPermissions ADD CONSTRAINT pk_RolesPermissions_id PRIMARY KEY (role_id,permission_id);
 ALTER TABLE Secrets ADD CONSTRAINT pk_Secrets_id PRIMARY KEY (apikey);
+ALTER TABLE SpecialsPermissions ADD CONSTRAINT pk_SpecialsPermissions_id PRIMARY KEY (user_id,permission_id,object_id);
 ALTER TABLE UserAnswers ADD CONSTRAINT pk_UserAnswers_id PRIMARY KEY (id);
 ALTER TABLE UserAnswers MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE UserQuestions ADD CONSTRAINT pk_UserQuestions_id PRIMARY KEY (id);
 ALTER TABLE UserQuestions MODIFY id integer AUTO_INCREMENT;
 ALTER TABLE Users ADD CONSTRAINT pk_Users_id PRIMARY KEY (id);
 ALTER TABLE Users MODIFY id integer AUTO_INCREMENT;
+ALTER TABLE UsersRoles ADD CONSTRAINT pk_UsersRoles_id PRIMARY KEY (user_id,role_id);
 
 /* PART 3 : Creation of the UNIQUE constaints */
 ALTER TABLE Answers ADD CONSTRAINT uk_Answers_number UNIQUE (question_id, number);
@@ -138,33 +156,61 @@ ALTER TABLE Users ADD CONSTRAINT uk_Users_username UNIQUE (username);
 /* PART 4 : Creation of the FOREIGN KEYS */
 ALTER TABLE Answers ADD CONSTRAINT fk_Answers_question FOREIGN KEY (question_id) REFERENCES Questions(id);
 ALTER TABLE Courses ADD CONSTRAINT fk_Courses_user FOREIGN KEY (user_id) REFERENCES Users(id);
-ALTER TABLE Permissions ADD CONSTRAINT fk_Permissions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Questions ADD CONSTRAINT fk_Questions_quiz FOREIGN KEY (quiz_id) REFERENCES Quizzes(id);
 ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_quiz FOREIGN KEY (quiz_id) REFERENCES Quizzes(id);
 ALTER TABLE QuizSessions ADD CONSTRAINT fk_QuizSessions_user FOREIGN KEY (user_id) REFERENCES Users(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_course FOREIGN KEY (course_id) REFERENCES Courses(id);
 ALTER TABLE Quizzes ADD CONSTRAINT fk_Quizzes_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE RolesPermissions ADD CONSTRAINT fk_RolesPermissions_role FOREIGN KEY (role_id) REFERENCES Roles(id) ON DELETE CASCADE;
+ALTER TABLE RolesPermissions ADD CONSTRAINT fk_RolesPermissions_permission FOREIGN KEY (permission_id) REFERENCES Permissions(id) ON DELETE CASCADE;
 ALTER TABLE Secrets ADD CONSTRAINT fk_Secrets_user FOREIGN KEY (user_id) REFERENCES Users(id);
-ALTER TABLE Users ADD CONSTRAINT fk_Users_role FOREIGN KEY (role_id) REFERENCES Roles(id);
+ALTER TABLE SpecialsPermissions ADD CONSTRAINT fk_SpecialsPermissions_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE SpecialsPermissions ADD CONSTRAINT fk_SpecialsPermissions_role FOREIGN KEY (permission_id) REFERENCES Permissions(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_answer FOREIGN KEY (answer_id) REFERENCES Answers(id);
 ALTER TABLE UserAnswers ADD CONSTRAINT fk_UserAnswers_userquestion FOREIGN KEY (userquestion_id) REFERENCES UserQuestions(id);
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_question FOREIGN KEY (question_id) REFERENCES Questions(id);
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_quizsession FOREIGN KEY (quizsession_id) REFERENCES QuizSessions(id);
 ALTER TABLE UserQuestions ADD CONSTRAINT fk_UserQuestions_user FOREIGN KEY (user_id) REFERENCES Users(id);
+ALTER TABLE UsersRoles ADD CONSTRAINT fk_UsersRoles_user FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE;
+ALTER TABLE UsersRoles ADD CONSTRAINT fk_UsersRoles_role FOREIGN KEY (role_id) REFERENCES Roles(id);
 
 /* Part 5 : populate databases for tests */
+INSERT INTO Users (id, username, email, firstname, lastname ) VALUES
+(1, 'gattazr', 'gattazr@students.wwu.edu', 'Remi', 'GATTAZ'),
+(2, 'shiplem3', 'shiplem3@students.wwu.edu', 'Mark', 'SHIPLEEY'),
+(3, 'klionsk', 'klionsk@students.wwu.edu', 'Katie', 'KLIONS'),
+(4, 'thomas92', 'thomas92@students.wwu.edu', 'Cody', 'THOMAS');
 INSERT INTO Roles (id, name) VALUES
 (1, 'admninistrator'),
 (2, 'professor'),
 (3, 'student');
-INSERT INTO Users (id, role_id, username, email, firstname, lastname ) VALUES
-(1, 3, 'gattazr', 'gattazr@students.wwu.edu', 'Remi', 'GATTAZ'),
-(2, 3, 'shiplem3', 'shiplem3@students.wwu.edu', 'Mark', 'SHIPLEEY'),
-(3, 3, 'klionsk', 'klionsk@students.wwu.edu', 'Katie', 'KLIONS'),
-(4, 3, 'thomas92', 'thomas92@students.wwu.edu', 'Cody', 'THOMAS');
-INSERT INTO Permissions(user_id,type,parent_id,name) VALUES
-(1, 'quiz', 2, 'write'),
-(2, 'course', 1, 'write');
+INSERT INTO Permissions (id,name) VALUES
+(1, 'edit_users'),
+(2, 'edit_roles'),
+(3, 'delete_roles'),
+(4, 'edit_others_courses'),
+(5, 'delete_others_courses'),
+(6, 'edit_others_quizzes'),
+(7, 'delete_others_quizzes'),
+(8, 'edit_courses'),
+(9, 'edit_quizzes');
+INSERT INTO UsersRoles (user_id, role_id) VALUES
+(1,3),
+(2,3),
+(3,3),
+(4,3);
+INSERT INTO RolesPermissions (role_id, permission_id) VALUES 
+(1,1),
+(1,2),
+(1,3),
+(1,4),
+(1,5),
+(1,6),
+(1,7),
+(1,8),
+(1,9),
+(2,8),
+(2,9);
 INSERT INTO Secrets (apikey, user_id, secret ) VALUES
 ('nufNixPhWpPxanqeLVJZvJaYKrdmXxuH', 1, 'dpUgrjuxtiQCiVqlQZZAqrBFnglKnaSE'),
 ('kfKDdoZxpytjxOYOwEvZEuitsTMlBTsr', 2, 'wHVFQjqbbrfJjaaHJVwsbIsiTdymYiYP'),
